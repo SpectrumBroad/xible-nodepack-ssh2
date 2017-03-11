@@ -1,0 +1,11 @@
+{
+	"name": "ssh2.client",
+	"type": "object",
+	"description": "Sets up a SSH connection to a server.",
+	"outputs": {
+		"client": {
+			"type": "ssh2.client"
+		}
+	},
+	"vault": ["hostname", "port", "username", "privatekey", "password"]
+}
