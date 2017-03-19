@@ -12,6 +12,7 @@ module.exports = function(NODE) {
 				sshClient = new require('ssh2').Client();
 				sshClient.on('ready', () => {
 
+					NODE.removeAllStatuses();
 					NODE.addStatus({
 						message: 'connected',
 						color: 'green'
@@ -53,6 +54,12 @@ module.exports = function(NODE) {
 
 					sshClientReady = false;
 
+				});
+
+				NODE.removeAllStatuses();
+				NODE.addStatus({
+					message: 'connecting',
+					color: 'orange'
 				});
 
 				sshClient.connect({
