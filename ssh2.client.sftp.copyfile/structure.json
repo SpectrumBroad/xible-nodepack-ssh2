@@ -7,12 +7,14 @@
 			"type": "trigger"
 		},
 		"client": {
-			"type": "ssh2.client"
+			"type": "ssh2.client",
+			"description": "The client to copy the file to."
 		}
 	},
 	"outputs": {
 		"done": {
-			"type": "trigger"
+			"type": "trigger",
+			"description": "Triggered when all copy actions have completed."
 		}
 	}
 }

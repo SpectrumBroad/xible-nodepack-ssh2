@@ -7,18 +7,22 @@
 			"type": "trigger"
 		},
 		"client": {
-			"type": "ssh2.client"
+			"type": "ssh2.client",
+			"description": "The client to execute the command on."
 		}
 	},
 	"outputs": {
 		"done": {
-			"type": "trigger"
+			"type": "trigger",
+			"description": "Triggered whenever all standard output streams have closed."
 		},
 		"stdout": {
-			"type": "stream.readable"
+			"type": "stream.readable",
+			"description": "Standard output stream."
 		},
 		"stderr": {
-			"type": "stream.readable"
+			"type": "stream.readable",
+			"description": "Standard error stream."
 		}
 	}
 }
