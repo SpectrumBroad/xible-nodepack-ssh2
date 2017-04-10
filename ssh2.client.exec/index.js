@@ -1,6 +1,21 @@
 module.exports = function(NODE) {
 
+	const EventEmitter = require('events').EventEmitter;
+
 	let doneOut = NODE.getOutputByName('done');
+	let stdOut = NODE.getOutputByName('stdout');
+	let stdErr = NODE.getOutputByName('stderr');
+
+	let stdOutStream = new EventEmitter();
+	let stdErrStream = new EventEmitter();
+
+	stdOut.on('trigger', (conn, state, callback) => {
+		callback(stdOutStream);
+	});
+
+	stdErr.on('trigger', (conn, state, callback) => {
+		callback(stdErrStream);
+	});
 
 	let clientIn = NODE.getInputByName('client');
 	let triggerIn = NODE.getInputByName('trigger');
@@ -8,33 +23,55 @@ module.exports = function(NODE) {
 
 		clientIn.getValues(state).then((clients) => {
 
-			let doneCount = 0;
+			let closeCount = 0;
+			let endCount = 0;
 			let clientsLength = clients.length;
 
 			clients.forEach((client) => {
 				client.exec(NODE.data.cmd, (err, stream) => {
 
 					if (err) {
-
 						NODE.fail(err, state);
 						return;
-
 					}
 
+					// handle stdout
 					stream.on('close', (code, signal) => {
 
-						if (code) {
-							return NODE.fail(`exited with non-zero code: "${code}"`, state);
+						let done = false;
+						if (++closeCount === clientsLength) {
+							stdOutStream.emit('close');
+							done = true;
 						}
 
-						//check if we have processed the command for all clients
-						if (++doneCount === clientsLength) {
+						if (code) {
+							NODE.fail(`exited with non-zero code: "${code}"`, state);
+							return;
+						}
+
+						// check if we have processed the command for all clients
+						if (done) {
 							doneOut.trigger(state);
 						}
 
 					});
 
+					stream.on('end', () => {
+
+						if (++endCount === clientsLength) {
+							stdOutStream.emit('end');
+						}
+
+					});
+
+					stream.on('error', (err) => {
+						stdOutStream.emit('error', err);
+						NODE.fail('' + err, state);
+					});
+
 					stream.on('data', (data) => {
+
+						stdOutStream.emit('data', data);
 
 						NODE.addStatus({
 							message: '' + data,
@@ -43,7 +80,11 @@ module.exports = function(NODE) {
 
 					});
 
+					// handle stderr
+					// TODO: handle other stream events
 					stream.stderr.on('data', (data) => {
+
+						stdErrStream.emit('data', data);
 
 						NODE.addStatus({
 							message: '' + data,

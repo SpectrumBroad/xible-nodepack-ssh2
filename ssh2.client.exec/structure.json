@@ -13,6 +13,12 @@
 	"outputs": {
 		"done": {
 			"type": "trigger"
+		},
+		"stdout": {
+			"type": "stream.readable"
+		},
+		"stderr": {
+			"type": "stream.readable"
 		}
 	}
 }
