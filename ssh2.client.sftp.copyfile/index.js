@@ -4,65 +4,113 @@ module.exports = function(NODE) {
 
 	let doneOut = NODE.getOutputByName('done');
 
-	let clientIn = NODE.getInputByName('client');
+	function getFsHandler(client, state) {
+
+		return new Promise((resolve, reject) => {
+
+			if (client === 'local') {
+				resolve(fs);
+				return;
+			}
+
+			if (client.__xibleSftp) {
+				resolve(client.__xibleSftp);
+			}
+
+			client.sftp((err, sftp) => {
+				if (err) {
+					reject(err);
+					return;
+				}
+				client.__xibleSftp = sftp;
+				resolve(sftp);
+			});
+		});
+
+	}
+
+	let originClientIn = NODE.getInputByName('originclient');
+	let destinationClientIn = NODE.getInputByName('destinationclient');
 	let triggerIn = NODE.getInputByName('trigger');
 	triggerIn.on('trigger', (conn, state) => {
 
-		clientIn.getValues(state).then((clients) => {
+		Promise.all([originClientIn.getValues(state), destinationClientIn.getValues(state)])
+			.then(([originClients, destinationClients]) => {
 
-			let doneCount = 0;
-			let clientsLength = clients.length;
+				//get the origin fs handlers
+				if (!originClients.length) {
+					originClients = ['local'];
+				}
+				let originPromise = Promise.all(originClients.map(client => getFsHandler(client)));
 
-			clients.forEach((client) => {
+				//get the destination fs handlers
+				if (!destinationClients.length) {
+					destinationClients = ['local'];
+				}
+				let destinationPromise = Promise.all(destinationClients.map(client => getFsHandler(client)));
 
-				client.sftp((err, sftp) => {
+				Promise.all([originPromise, destinationPromise])
+					.then(([originFsHandlers, destinationFsHandlers]) => {
 
-					if (err) {
+						const originLength = originFsHandlers.length;
+						const destinationLength = destinationFsHandlers.length;
+						let originDoneCount = 0;
+						originFsHandlers.forEach((originFsHandler) => {
 
-						NODE.fail(err, state);
-						return;
+							const readStream = originFsHandler.createReadStream(NODE.data.originPath, {
+								autoClose: false
+							});
+							readStream.on('error', (err) => {
+																console.log('r hier: '+NODE.data.originPath)
+								console.error(err);
+								NODE.fail('' + err, state);
+							});
 
-					}
+							let destinationDoneCount = 0;
+							destinationFsHandlers.forEach((destinationFsHandler) => {
 
-					//read the file from its origin and hook event handlers
-					let readStream = fs.createReadStream(NODE.data.originPath);
+								const writeStream = destinationFsHandler.createWriteStream(NODE.data.destinationPath);
+								writeStream.on('error', (err) => {
+																	console.log('wr hier: '+NODE.data.destinationPath);
+									console.error(err);
+									NODE.fail('' + err, state);
+								});
 
-					readStream.on('error', (err) => {
+								writeStream.on('close', () => {
 
-						console.error(err);
-						NODE.fail('' + err, state);
+									//done for this originFsHandler
+									if (++destinationDoneCount === destinationLength) {
+
+										readStream.close();
+
+										//complete done
+										if (++originDoneCount === originLength) {
+
+											//close all sftp's
+											originFsHandlers.concat(destinationFsHandlers).forEach((handler) => {
+												if(typeof handler.end === 'function') {
+													handler.end();
+												}
+											});
+
+											//next
+											doneOut.trigger(state);
+
+										}
+
+									}
+								});
+
+								//pipe read into write to start the actual transfer of data
+								readStream.pipe(writeStream);
+
+							});
+
+						});
 
 					});
-
-					//write the file to the destination and hook event handlers
-					let writeStream = sftp.createWriteStream(NODE.data.destinationPath);
-
-					writeStream.on('error', (err) => {
-
-						console.error(err);
-						NODE.fail('' + err, state);
-
-					});
-
-					writeStream.on('close', () => {
-
-						sftp.end();
-
-						//check if we have processed the command for all clients
-						if (++doneCount === clientsLength) {
-							doneOut.trigger(state);
-						}
-
-					});
-
-					//pipe read into write to start the actual transfer of data
-					readStream.pipe(writeStream);
-
-				});
 
 			});
-
-		});
 
 	});
 

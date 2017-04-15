@@ -1,14 +1,18 @@
 {
 	"name": "ssh2.client.sftp.copyfile",
 	"type": "action",
-	"description": "Copies a local file to a the SSH2 client.",
+	"description": "Copies a file from every origin SSH2 client (or local) to every destination SSH2 client (or local).",
 	"inputs": {
 		"trigger": {
 			"type": "trigger"
 		},
-		"client": {
+		"originclient": {
 			"type": "ssh2.client",
-			"description": "The client to copy the file to."
+			"description": "The client to copy the file from. If left empty, the origin is assumed to be the localhost."
+		},
+		"destinationclient": {
+			"type": "ssh2.client",
+			"description": "The client to copy the file to. If left empty, the destination is assumed to be the localhost."
 		}
 	},
 	"outputs": {
