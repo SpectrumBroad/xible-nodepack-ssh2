@@ -61,9 +61,7 @@ module.exports = function(NODE) {
 								autoClose: false
 							});
 							readStream.on('error', (err) => {
-																console.log('r hier: '+NODE.data.originPath)
-								console.error(err);
-								NODE.fail('' + err, state);
+								NODE.error(err, state);
 							});
 
 							let destinationDoneCount = 0;
@@ -71,9 +69,7 @@ module.exports = function(NODE) {
 
 								const writeStream = destinationFsHandler.createWriteStream(NODE.data.destinationPath);
 								writeStream.on('error', (err) => {
-																	console.log('wr hier: '+NODE.data.destinationPath);
-									console.error(err);
-									NODE.fail('' + err, state);
+									NODE.error(err, state);
 								});
 
 								writeStream.on('close', () => {

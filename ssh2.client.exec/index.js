@@ -31,7 +31,7 @@ module.exports = function(NODE) {
 				client.exec(NODE.data.cmd, (err, stream) => {
 
 					if (err) {
-						NODE.fail(err, state);
+						NODE.error(err, state);
 						return;
 					}
 
@@ -45,7 +45,7 @@ module.exports = function(NODE) {
 						}
 
 						if (code) {
-							NODE.fail(`exited with non-zero code: "${code}"`, state);
+							NODE.error(`exited with non-zero code: "${code}"`, state);
 							return;
 						}
 
@@ -66,7 +66,7 @@ module.exports = function(NODE) {
 
 					stream.on('error', (err) => {
 						stdOutStream.emit('error', err);
-						NODE.fail('' + err, state);
+						NODE.error(err, state);
 					});
 
 					stream.on('data', (data) => {
