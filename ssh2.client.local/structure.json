@@ -1,7 +1,7 @@
 {
   "name": "ssh2.client.local",
   "type": "object",
-  "description": "Connects to the local client running XIBLE.",
+  "description": "Connects to the local client running XIBLE. This does not setup a SSH connection to localhost, but instead runs everything directly on localhost.",
   "outputs": {
     "client": {
       "type": "ssh2.client"
