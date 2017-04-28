@@ -1,0 +1,24 @@
+{
+  "name": "ssh2.client.sftp.copy",
+  "type": "action",
+  "description": "Copies a path or glob-pattern from every origin SSH2 client (or local) to every destination SSH2 client (or local). Existing files are overwritten.",
+  "inputs": {
+    "trigger": {
+      "type": "trigger"
+    },
+    "originclient": {
+      "type": "ssh2.client",
+      "description": "The client to copy the data from. If left empty, the origin is assumed to be the localhost."
+    },
+    "destinationclient": {
+      "type": "ssh2.client",
+      "description": "The client to copy the data to. If left empty, the destination is assumed to be the localhost."
+    }
+  },
+  "outputs": {
+    "done": {
+      "type": "trigger",
+      "description": "Triggered when all copy actions have completed."
+    }
+  }
+}
