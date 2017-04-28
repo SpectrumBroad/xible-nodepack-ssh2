@@ -8,7 +8,7 @@
     },
     "client": {
       "type": "ssh2.client",
-      "description": "The client to execute the command on."
+      "description": "The client to execute the command on. If left empty, this is assumed to be ssh2.client.local."
     }
   },
   "outputs": {

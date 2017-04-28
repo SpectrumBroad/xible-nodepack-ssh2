@@ -23,6 +23,10 @@ module.exports = (NODE) => {
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
     clientIn.getValues(state).then((clients) => {
+      if (!clients.length) {
+        clients = ['local'];
+      }
+
       const handleExec = (err, stdout, stderr, clientExec) => {
         if (err) {
           NODE.error(err, state);
@@ -38,7 +42,7 @@ module.exports = (NODE) => {
         if (clientExec) {
           clientExec.on('exit', (code) => {
             exitCode = code;
-          })
+          });
         }
 
         // handle stdout

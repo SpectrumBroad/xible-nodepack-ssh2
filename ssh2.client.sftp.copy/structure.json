@@ -8,11 +8,11 @@
     },
     "originclient": {
       "type": "ssh2.client",
-      "description": "The client to copy the data from. If left empty, the origin is assumed to be the localhost."
+      "description": "The client to copy the data from. If left empty, the origin is assumed to be ssh2.client.local."
     },
     "destinationclient": {
       "type": "ssh2.client",
-      "description": "The client to copy the data to. If left empty, the destination is assumed to be the localhost."
+      "description": "The client to copy the data to. If left empty, the destination is assumed to be ssh2.client.local."
     }
   },
   "outputs": {
