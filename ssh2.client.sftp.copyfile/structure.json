@@ -1,7 +1,7 @@
 {
   "name": "ssh2.client.sftp.copyfile",
   "type": "action",
-  "description": "Copies a file from every origin SSH2 client (or local) to every destination SSH2 client (or local).",
+  "description": "Copies a file from every origin SSH2 client (or local) to every destination SSH2 client (or local). Existing files are overwritten.",
   "inputs": {
     "trigger": {
       "type": "trigger"
