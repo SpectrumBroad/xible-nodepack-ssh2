@@ -8,6 +8,9 @@ module.exports = (NODE) => {
   triggerIn.on('trigger', (conn, state) => {
     clientIn.getValues(state).then((clients) => {
       clients.forEach((client) => {
+        if (client === 'local') {
+          return;
+        }
         client.end();
       });
 

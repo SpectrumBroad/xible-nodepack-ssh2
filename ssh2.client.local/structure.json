@@ -1,0 +1,10 @@
+{
+  "name": "ssh2.client.local",
+  "type": "object",
+  "description": "Connects to the local client running XIBLE.",
+  "outputs": {
+    "client": {
+      "type": "ssh2.client"
+    }
+  }
+}

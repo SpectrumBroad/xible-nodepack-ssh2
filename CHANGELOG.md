@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - ssh2.client.sftp.copy node
 - license file
+- ssh2.client.local node
 
 ### Changed
 - eslint/airbnb is now the default code style
