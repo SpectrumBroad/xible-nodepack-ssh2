@@ -7,14 +7,23 @@ module.exports = (NODE) => {
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
     clientIn.getValues(state).then((clients) => {
-      clients.forEach((client) => {
+      const clientsLength = clients.length;
+      let doneCount = 0;
+      for (let i = 0; i < clients.length; i += 1) {
+        const client = clients[i];
         if (client === 'local') {
-          return;
+          if (++doneCount === clientsLength) {
+            doneOut.trigger(state);
+          }
+          continue;
         }
+        client.once('end', () => {
+          if (++doneCount === clientsLength) {
+            doneOut.trigger(state);
+          }
+        });
         client.end();
-      });
-
-      doneOut.trigger(state);
+      }
     });
   });
 };
