@@ -1,22 +1,31 @@
 {
-	"name": "xible-nodepack-ssh2",
-	"version": "0.4.0",
-	"description": "Set of ssh2 nodes for XIBLE.",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/spectrumbroad/xible-nodepack-ssh2"
-	},
-	"bugs": {
-		"url": "https://github.com/spectrumbroad/xible-nodepack-ssh2/issues",
-		"email": "bugs@xible.io"
-	},
-	"keywords": [
-		"xible",
-		"ssh",
+  "name": "xible-nodepack-ssh2",
+  "version": "0.5.0",
+  "description": "Set of ssh2 nodes for XIBLE.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spectrumbroad/xible-nodepack-ssh2"
+  },
+  "bugs": {
+    "url": "https://github.com/spectrumbroad/xible-nodepack-ssh2/issues",
+    "email": "bugs@xible.io"
+  },
+  "keywords": [
+    "xible",
+    "ssh",
     "nodepack"
-	],
-	"dependencies": {
-		"ssh2": "*"
+  ],
+  "dependencies": {
+    "ssh2": "*",
+    "parse-glob": "*",
+    "micromatch": "*"
+  },
+	"devDependencies": {
+		"eslint": "*",
+    "eslint-plugin-import": "*",
+    "eslint-config-airbnb": "*",
+    "eslint-plugin-jsx-a11y": "*",
+    "eslint-plugin-react": "*"
 	}
 }
