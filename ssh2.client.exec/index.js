@@ -23,7 +23,7 @@ module.exports = (NODE) => {
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
     clientIn.getValues(state).then((clients) => {
-      const handleExec = (err, stdout, stderr) => {
+      const handleExec = (err, stdout, stderr, clientExec) => {
         if (err) {
           NODE.error(err, state);
           return;
@@ -33,16 +33,24 @@ module.exports = (NODE) => {
           stderr = stdout.stderr;
         }
 
+        // Handle exit codes for 'local' / child_process.
+        let exitCode;
+        if (clientExec) {
+          clientExec.on('exit', (code) => {
+            exitCode = code;
+          })
+        }
+
         // handle stdout
-        stdout.on('close', (code, signal) => {
+        stdout.on('close', (code) => {
           let done = false;
           if (++closeCount === clientsLength) {
             stdOutStream.emit('close');
             done = true;
           }
 
-          if (code) {
-            NODE.error(`exited with non-zero code: "${code}"`, state);
+          if (code || exitCode) {
+            NODE.error(`exited with non-zero code: "${code || exitCode}"`, state);
             return;
           }
 
@@ -73,7 +81,7 @@ module.exports = (NODE) => {
         });
 
         // handle stderr
-        // TODO: handle other stream events
+        // TODO: handle other stream events on stderr
         stderr.on('data', (data) => {
           stdErrStream.emit('data', data);
 
@@ -93,7 +101,7 @@ module.exports = (NODE) => {
         if (client === 'local') {
           client = childProcess;
           const clientExec = client.exec(NODE.data.cmd);
-          handleExec(null, clientExec.stdout, clientExec.stderr);
+          handleExec(null, clientExec.stdout, clientExec.stderr, clientExec);
         } else {
           client.exec(NODE.data.cmd, handleExec);
         }
