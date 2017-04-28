@@ -1,89 +1,75 @@
-module.exports = function(NODE) {
+'use strict';
 
-	let sshClient;
-	let sshClientReady = false;
+module.exports = (NODE) => {
+  let sshClient;
+  let sshClientReady = false;
 
-	function callbackSsh(callback) {
+  function callbackSsh(callback) {
+    if (!sshClientReady) {
+      if (!sshClient) {
+        sshClient = new require('ssh2').Client();
+        sshClient.on('ready', () => {
+          NODE.removeAllStatuses();
+          NODE.addStatus({
+            message: 'connected',
+            color: 'green'
+          });
 
-		if (!sshClientReady) {
+          sshClientReady = true;
+        });
 
-			if (!sshClient) {
+        sshClient.on('error', (err) => {
+          NODE.setTracker({
+            message: `${err}`,
+            color: 'red',
+            timeout: 7000
+          });
+        });
 
-				sshClient = new require('ssh2').Client();
-				sshClient.on('ready', () => {
+        sshClient.on('close', () => {
+          NODE.removeAllStatuses();
+          NODE.addStatus({
+            message: 'disconnected',
+            color: 'red'
+          });
 
-					NODE.removeAllStatuses();
-					NODE.addStatus({
-						message: 'connected',
-						color: 'green'
-					});
+          sshClientReady = false;
+        });
 
-					sshClientReady = true;
+        sshClient.on('end', () => {
+          NODE.removeAllStatuses();
+          NODE.addStatus({
+            message: 'disconnected',
+            color: 'red'
+          });
 
-				});
+          sshClientReady = false;
+        });
 
-				sshClient.on('error', (err) => {
+        NODE.removeAllStatuses();
+        NODE.addStatus({
+          message: 'connecting',
+          color: 'orange'
+        });
 
-					NODE.setTracker({
-						message: '' + err,
-						color: 'red',
-						timeout: 7000
-					});
+        sshClient.connect({
+          host: NODE.data.hostname,
+          port: NODE.data.port,
+          username: NODE.data.username,
+          password: NODE.data.password
+        });
 
-				});
+        sshClient.once('ready', () => callbackSsh(callback));
+        return;
+      }
 
-				sshClient.on('close', () => {
+      sshClient.once('ready', () => callbackSsh(callback));
+      return;
+    }
 
-					NODE.removeAllStatuses();
-					NODE.addStatus({
-						message: 'disconnected',
-						color: 'red'
-					});
+    callback(sshClient);
+  }
 
-					sshClientReady = false;
-
-				});
-
-				sshClient.on('end', () => {
-
-					NODE.removeAllStatuses();
-					NODE.addStatus({
-						message: 'disconnected',
-						color: 'red'
-					});
-
-					sshClientReady = false;
-
-				});
-
-				NODE.removeAllStatuses();
-				NODE.addStatus({
-					message: 'connecting',
-					color: 'orange'
-				});
-
-				sshClient.connect({
-					host: NODE.data.hostname,
-					port: NODE.data.port,
-					username: NODE.data.username,
-					password: NODE.data.password
-				});
-
-				sshClient.once('ready', () => callbackSsh(callback));
-				return;
-
-			}
-
-			sshClient.once('ready', () => callbackSsh(callback));
-			return;
-
-		}
-
-		callback(sshClient);
-
-	}
-
-	let clientOut = NODE.getOutputByName('client');
-	clientOut.on('trigger', (conn, state, callback) => callbackSsh(callback));
-
+  const clientOut = NODE.getOutputByName('client');
+  clientOut.on('trigger', (conn, state, callback) => callbackSsh(callback));
 };

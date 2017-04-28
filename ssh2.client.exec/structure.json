@@ -1,28 +1,28 @@
 {
-	"name": "ssh2.client.exec",
-	"type": "action",
-	"description": "Executes a command on a SSH server connected through an SSH client.",
-	"inputs": {
-		"trigger": {
-			"type": "trigger"
-		},
-		"client": {
-			"type": "ssh2.client",
-			"description": "The client to execute the command on."
-		}
-	},
-	"outputs": {
-		"done": {
-			"type": "trigger",
-			"description": "Triggered whenever all standard output streams have closed."
-		},
-		"stdout": {
-			"type": "stream.readable",
-			"description": "Standard output stream."
-		},
-		"stderr": {
-			"type": "stream.readable",
-			"description": "Standard error stream."
-		}
-	}
+  "name": "ssh2.client.exec",
+  "type": "action",
+  "description": "Executes a command on a SSH server connected through an SSH client.",
+  "inputs": {
+    "trigger": {
+      "type": "trigger"
+    },
+    "client": {
+      "type": "ssh2.client",
+      "description": "The client to execute the command on."
+    }
+  },
+  "outputs": {
+    "done": {
+      "type": "trigger",
+      "description": "Triggered whenever all standard output streams have closed."
+    },
+    "stdout": {
+      "type": "stream.readable",
+      "description": "Standard output stream."
+    },
+    "stderr": {
+      "type": "stream.readable",
+      "description": "Standard error stream."
+    }
+  }
 }

@@ -1,105 +1,90 @@
-module.exports = function(NODE) {
+'use strict';
 
-	const EventEmitter = require('events').EventEmitter;
+module.exports = (NODE) => {
+  const EventEmitter = require('events').EventEmitter;
 
-	let doneOut = NODE.getOutputByName('done');
-	let stdOut = NODE.getOutputByName('stdout');
-	let stdErr = NODE.getOutputByName('stderr');
+  const doneOut = NODE.getOutputByName('done');
+  const stdOut = NODE.getOutputByName('stdout');
+  const stdErr = NODE.getOutputByName('stderr');
 
-	let stdOutStream = new EventEmitter();
-	let stdErrStream = new EventEmitter();
+  const stdOutStream = new EventEmitter();
+  const stdErrStream = new EventEmitter();
 
-	stdOut.on('trigger', (conn, state, callback) => {
-		callback(stdOutStream);
-	});
+  stdOut.on('trigger', (conn, state, callback) => {
+    callback(stdOutStream);
+  });
 
-	stdErr.on('trigger', (conn, state, callback) => {
-		callback(stdErrStream);
-	});
+  stdErr.on('trigger', (conn, state, callback) => {
+    callback(stdErrStream);
+  });
 
-	let clientIn = NODE.getInputByName('client');
-	let triggerIn = NODE.getInputByName('trigger');
-	triggerIn.on('trigger', (conn, state) => {
+  const clientIn = NODE.getInputByName('client');
+  const triggerIn = NODE.getInputByName('trigger');
+  triggerIn.on('trigger', (conn, state) => {
+    clientIn.getValues(state).then((clients) => {
+      let closeCount = 0;
+      let endCount = 0;
+      const clientsLength = clients.length;
 
-		clientIn.getValues(state).then((clients) => {
+      clients.forEach((client) => {
+        client.exec(NODE.data.cmd, (err, stream) => {
+          if (err) {
+            NODE.error(err, state);
+            return;
+          }
 
-			let closeCount = 0;
-			let endCount = 0;
-			let clientsLength = clients.length;
+          // handle stdout
+          stream.on('close', (code, signal) => {
+            let done = false;
+            if (++closeCount === clientsLength) {
+              stdOutStream.emit('close');
+              done = true;
+            }
 
-			clients.forEach((client) => {
-				client.exec(NODE.data.cmd, (err, stream) => {
+            if (code) {
+              NODE.error(`exited with non-zero code: "${code}"`, state);
+              return;
+            }
 
-					if (err) {
-						NODE.error(err, state);
-						return;
-					}
+            // check if we have processed the command for all clients
+            if (done) {
+              doneOut.trigger(state);
+            }
+          });
 
-					// handle stdout
-					stream.on('close', (code, signal) => {
+          stream.on('end', () => {
+            if (++endCount === clientsLength) {
+              stdOutStream.emit('end');
+            }
+          });
 
-						let done = false;
-						if (++closeCount === clientsLength) {
-							stdOutStream.emit('close');
-							done = true;
-						}
+          stream.on('error', (streamErr) => {
+            stdOutStream.emit('error', streamErr);
+            NODE.error(streamErr, state);
+          });
 
-						if (code) {
-							NODE.error(`exited with non-zero code: "${code}"`, state);
-							return;
-						}
+          stream.on('data', (data) => {
+            stdOutStream.emit('data', data);
 
-						// check if we have processed the command for all clients
-						if (done) {
-							doneOut.trigger(state);
-						}
+            NODE.addStatus({
+              message: `${data}`,
+              timeout: 7000
+            });
+          });
 
-					});
+          // handle stderr
+          // TODO: handle other stream events
+          stream.stderr.on('data', (data) => {
+            stdErrStream.emit('data', data);
 
-					stream.on('end', () => {
-
-						if (++endCount === clientsLength) {
-							stdOutStream.emit('end');
-						}
-
-					});
-
-					stream.on('error', (err) => {
-						stdOutStream.emit('error', err);
-						NODE.error(err, state);
-					});
-
-					stream.on('data', (data) => {
-
-						stdOutStream.emit('data', data);
-
-						NODE.addStatus({
-							message: '' + data,
-							timeout: 7000
-						});
-
-					});
-
-					// handle stderr
-					// TODO: handle other stream events
-					stream.stderr.on('data', (data) => {
-
-						stdErrStream.emit('data', data);
-
-						NODE.addStatus({
-							message: '' + data,
-							color: 'red',
-							timeout: 7000
-						});
-
-					});
-
-				});
-
-			});
-
-		});
-
-	});
-
+            NODE.addStatus({
+              message: `${data}`,
+              color: 'red',
+              timeout: 7000
+            });
+          });
+        });
+      });
+    });
+  });
 };
