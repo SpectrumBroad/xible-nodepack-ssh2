@@ -117,7 +117,7 @@ module.exports = (NODE) => {
           }
 
           const readDir = () => {
-            originFsHandler.readdir(originPath, (readdirErr, files) => {
+            originFsHandler.readdir(originPath, async (readdirErr, files) => {
               if (readdirErr) {
                 reject(readdirErr);
                 return;
@@ -125,18 +125,21 @@ module.exports = (NODE) => {
 
               files = files.map((file) => {
                 if (typeof file !== 'string') {
-                  file = file.filename;
+                  return file.filename;
                 }
                 return file;
               });
 
-              Promise.all(
-                files.map(
-                  file => copyPath(originFsHandler, destinationFsHandlers, `${originPath}/${file}`, `${destinationPath}/${file}`, glob)
-                )
-              )
-              .then(() => resolve())
-              .catch(err => reject(err));
+              try {
+                for (let i = 0; i < files.length; i += 1) {
+                  const file = files[i];
+                  await copyPath(originFsHandler, destinationFsHandlers, `${originPath}/${file}`, `${destinationPath}/${file}`, glob);
+                }
+              } catch (err) {
+                reject(err);
+              }
+
+              resolve();
             });
           };
 
