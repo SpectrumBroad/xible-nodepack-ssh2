@@ -19,7 +19,6 @@
     "no-multi-assign": "warn",
     "default-case": "off",
     "strict": ["error", "global"],
-    "no-console": "off",
     "no-continue": "off",
     "no-use-before-define": ["error", {"functions": false, "classes": false}],
     "indent": ["error", 2, {"MemberExpression": 0, "SwitchCase": 1}],
