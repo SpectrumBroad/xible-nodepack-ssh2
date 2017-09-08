@@ -16,16 +16,19 @@
     "ssh",
     "nodepack"
   ],
+  "scripts": {
+    "prepublishOnly": "npm shrinkwrap --only=prod"
+  },
   "dependencies": {
     "ssh2": "*",
     "parse-glob": "*",
     "micromatch": "*"
   },
   "devDependencies": {
-    "eslint": "*",
-    "eslint-plugin-import": "*",
-    "eslint-config-airbnb": "*",
-    "eslint-plugin-jsx-a11y": "*",
-    "eslint-plugin-react": "*"
+    "eslint": "^4.3.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.1.0"
   }
 }
