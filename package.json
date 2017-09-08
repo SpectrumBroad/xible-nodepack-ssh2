@@ -1,6 +1,6 @@
 {
   "name": "xible-nodepack-ssh2",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Set of ssh2 nodes for XIBLE.",
   "license": "MIT",
   "repository": {
