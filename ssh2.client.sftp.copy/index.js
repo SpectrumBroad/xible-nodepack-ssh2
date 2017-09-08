@@ -27,13 +27,13 @@ module.exports = (NODE) => {
                   return;
                 }
                 ensureDir(path.substring(0, path.lastIndexOf('/')), [fsHandler], true)
-                  .then(() => ensureDir(path, [fsHandler], true))
-                  .then(() => {
-                    if (++doneCount === fsHandlerCount) {
-                      resolve();
-                    }
-                  })
-                  .catch(ensureErr => reject(ensureErr));
+                .then(() => ensureDir(path, [fsHandler], true))
+                .then(() => {
+                  if (++doneCount === fsHandlerCount) {
+                    resolve();
+                  }
+                })
+                .catch(ensureErr => reject(ensureErr));
                 return;
               }
               if (++doneCount === fsHandlerCount) {
@@ -47,7 +47,7 @@ module.exports = (NODE) => {
               resolve();
             }
           } else {
-            reject(`Destination path "${destinationPath}" exists and is not a directory.`);
+            reject(new Error(`Destination path "${path}" exists and is not a directory.`));
           }
         });
       });
@@ -90,14 +90,14 @@ module.exports = (NODE) => {
               });
 
               writeStream.on('close', () => {
-              // done for this originFsHandler
+                // done for this originFsHandler
                 if (++destinationDoneCount === destinationLength) {
                   readStream.close();
                   resolve();
                 }
               });
 
-            // pipe read into write to start the actual transfer of data
+              // pipe read into write to start the actual transfer of data
               readStream.pipe(writeStream);
             });
           };
@@ -105,10 +105,10 @@ module.exports = (NODE) => {
           const destinationDirPath = destinationPath.substring(0, destinationPath.lastIndexOf('/'));
 
           ensureDir(destinationDirPath, destinationFsHandlers)
-            .then(onDirExists)
-            .catch((err) => {
-              reject(err);
-            });
+          .then(onDirExists)
+          .catch((err) => {
+            reject(err);
+          });
 
         // if originPath is a directory, copy the directory recursively
         } else if (stats.isDirectory()) {
@@ -142,7 +142,7 @@ module.exports = (NODE) => {
 
           if (!glob.is.glob) {
             ensureDir(destinationPath, destinationFsHandlers)
-              .then(readDir);
+            .then(readDir);
           } else {
             readDir();
           }
@@ -159,67 +159,67 @@ module.exports = (NODE) => {
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
     Promise.all([originClientIn.getValues(state), destinationClientIn.getValues(state)])
-      .then(([originClients, destinationClients]) => {
-        // get the origin fs handlers
-        if (!originClients.length) {
-          originClients = ['local'];
-        }
-        const originPromise = Promise.all(
-          originClients.map(client => getFsHandler(client))
-        );
+    .then(([originClients, destinationClients]) => {
+      // get the origin fs handlers
+      if (!originClients.length) {
+        originClients = ['local'];
+      }
+      const originPromise = Promise.all(
+        originClients.map(client => getFsHandler(client))
+      );
 
-        // get the destination fs handlers
-        if (!destinationClients.length) {
-          destinationClients = ['local'];
-        }
-        const destinationPromise = Promise.all(
-          destinationClients.map(client => getFsHandler(client))
-        );
+      // get the destination fs handlers
+      if (!destinationClients.length) {
+        destinationClients = ['local'];
+      }
+      const destinationPromise = Promise.all(
+        destinationClients.map(client => getFsHandler(client))
+      );
 
-        let originPath = NODE.data.originPath.replace(/\\/g, '/');
-        if (originPath.substring(originPath.length - 1) === '/') {
-          originPath = originPath.substring(0, originPath.length - 1);
-        }
+      let originPath = NODE.data.originPath.replace(/\\/g, '/');
+      if (originPath.substring(originPath.length - 1) === '/') {
+        originPath = originPath.substring(0, originPath.length - 1);
+      }
 
-        const glob = parseGlob(originPath);
-        if (glob.is.glob) {
-          originPath = glob.base;
-        }
+      const glob = parseGlob(originPath);
+      if (glob.is.glob) {
+        originPath = glob.base;
+      }
 
-        let destinationPath = NODE.data.destinationPath.replace(/\\/g, '/');
-        if (destinationPath.substring(destinationPath.length - 1) === '/') {
-          destinationPath = destinationPath.substring(0, destinationPath.length - 1);
-        }
-        if (!glob.is.glob) {
-          destinationPath += `/${originPath.substring(originPath.lastIndexOf('/') + 1)}`;
-        }
+      let destinationPath = NODE.data.destinationPath.replace(/\\/g, '/');
+      if (destinationPath.substring(destinationPath.length - 1) === '/') {
+        destinationPath = destinationPath.substring(0, destinationPath.length - 1);
+      }
+      if (!glob.is.glob) {
+        destinationPath += `/${originPath.substring(originPath.lastIndexOf('/') + 1)}`;
+      }
 
-        Promise.all([originPromise, destinationPromise])
-          .then(([originFsHandlers, destinationFsHandlers]) => {  //eslint-disable-line
-            return Promise.all(
-              originFsHandlers.map(originFsHandler =>
-                copyPath(originFsHandler,
-                  destinationFsHandlers,
-                  originPath,
-                  destinationPath,
-                  glob
-                )
-              )
+      Promise.all([originPromise, destinationPromise])
+      .then(([originFsHandlers, destinationFsHandlers]) => {  //eslint-disable-line
+        return Promise.all(
+          originFsHandlers.map(originFsHandler =>
+            copyPath(originFsHandler,
+              destinationFsHandlers,
+              originPath,
+              destinationPath,
+              glob
             )
-            .then(() => {
-              originFsHandlers.concat(destinationFsHandlers).forEach((handler) => {
-                if (typeof handler.end === 'function') {
-                  handler.end();
-                }
-              });
-            });
-          })
-          .then(() => {
-            doneOut.trigger(state);
-          })
-          .catch((err) => {
-            NODE.error(err, state);
+          )
+        )
+        .then(() => {
+          originFsHandlers.concat(destinationFsHandlers).forEach((handler) => {
+            if (typeof handler.end === 'function') {
+              handler.end();
+            }
           });
+        });
+      })
+      .then(() => {
+        doneOut.trigger(state);
+      })
+      .catch((err) => {
+        NODE.error(err, state);
       });
+    });
   });
 };
