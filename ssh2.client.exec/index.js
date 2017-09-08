@@ -22,7 +22,8 @@ module.exports = (NODE) => {
   const clientsIn = NODE.getInputByName('clients');
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
-    clientIn.getValues(state).then((clients) => {
+    clientsIn.getValues(state)
+    .then((clients) => {
       if (!clients.length) {
         clients = ['local'];
       }
