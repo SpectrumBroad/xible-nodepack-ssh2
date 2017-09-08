@@ -24,5 +24,6 @@
       "type": "stream.readable",
       "description": "Standard error stream."
     }
-  }
+  },
+  "vault": ["sudoUser"]
 }

@@ -22,6 +22,15 @@ module.exports = (NODE) => {
   const clientsIn = NODE.getInputByName('clients');
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
+    // build the command
+    let cmd = NODE.data.cmd;
+    if (NODE.data.sudoUser === 'root') {
+      cmd = `sudo ${cmd}`;
+    } else if (NODE.data.sudoUser) {
+      cmd = `sudo su - '${NODE.data.sudoUser}' -c "${cmd.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+    }
+
+    // get the clients to execute this command on
     clientsIn.getValues(state)
     .then((clients) => {
       if (!clients.length) {
@@ -33,6 +42,10 @@ module.exports = (NODE) => {
           NODE.error(err, state);
           return;
         }
+
+        let closeCount = 0;
+        let endCount = 0;
+        const clientsLength = clients.length;
 
         if (!stderr) {
           stderr = stdout.stderr;
@@ -98,17 +111,13 @@ module.exports = (NODE) => {
         });
       };
 
-      let closeCount = 0;
-      let endCount = 0;
-      const clientsLength = clients.length;
-
       clients.forEach((client) => {
         if (client === 'local') {
           client = childProcess;
-          const clientExec = client.exec(NODE.data.cmd);
+          const clientExec = client.exec(cmd);
           handleExec(null, clientExec.stdout, clientExec.stderr, clientExec);
         } else {
-          client.exec(NODE.data.cmd, handleExec);
+          client.exec(cmd, handleExec);
         }
       });
     });
