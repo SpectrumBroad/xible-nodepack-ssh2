@@ -1,14 +1,14 @@
 {
   "name": "ssh2.client.exec",
   "type": "action",
-  "description": "Executes a command on a SSH server connected through an SSH client.",
+  "description": "Executes a command on one more more SSH2 clients.",
   "inputs": {
     "trigger": {
       "type": "trigger"
     },
-    "client": {
+    "clients": {
       "type": "ssh2.client",
-      "description": "The client to execute the command on. If left empty, this is assumed to be ssh2.client.local."
+      "description": "The clients to execute the command on. If left unconnected, this is assumed to be ssh2.client.local."
     }
   },
   "outputs": {

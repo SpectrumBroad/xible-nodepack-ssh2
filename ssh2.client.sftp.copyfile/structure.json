@@ -6,13 +6,13 @@
     "trigger": {
       "type": "trigger"
     },
-    "originclient": {
+    "originclients": {
       "type": "ssh2.client",
-      "description": "The client to copy the file from. If left empty, the origin is assumed to be ssh2.client.local."
+      "description": "The client to copy the file from. If left unconnected, the origin is assumed to be ssh2.client.local."
     },
-    "destinationclient": {
+    "destinationclients": {
       "type": "ssh2.client",
-      "description": "The client to copy the file to. If left empty, the destination is assumed to be ssh2.client.local."
+      "description": "The client to copy the file to. If left unconnected, the destination is assumed to be ssh2.client.local."
     }
   },
   "outputs": {

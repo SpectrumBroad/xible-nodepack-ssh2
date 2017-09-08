@@ -4,11 +4,11 @@ module.exports = (NODE) => {
   const getFsHandler = require('../getFsHandler');
 
   const doneOut = NODE.getOutputByName('done');
-  const originClientIn = NODE.getInputByName('originclient');
-  const destinationClientIn = NODE.getInputByName('destinationclient');
+  const originClientsIn = NODE.getInputByName('originclients');
+  const destinationClientsIn = NODE.getInputByName('destinationclients');
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
-    Promise.all([originClientIn.getValues(state), destinationClientIn.getValues(state)])
+    Promise.all([originClientsIn.getValues(state), destinationClientsIn.getValues(state)])
     .then(([originClients, destinationClients]) => {
       // get the origin fs handlers
       if (!originClients.length) {

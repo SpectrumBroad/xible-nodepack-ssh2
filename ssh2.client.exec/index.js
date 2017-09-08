@@ -19,7 +19,7 @@ module.exports = (NODE) => {
     callback(stdErrStream);
   });
 
-  const clientIn = NODE.getInputByName('client');
+  const clientsIn = NODE.getInputByName('clients');
   const triggerIn = NODE.getInputByName('trigger');
   triggerIn.on('trigger', (conn, state) => {
     clientIn.getValues(state).then((clients) => {

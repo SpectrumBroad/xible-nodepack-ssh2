@@ -6,7 +6,7 @@
     "trigger": {
       "type": "trigger"
     },
-    "client": {
+    "clients": {
       "type": "ssh2.client"
     }
   },
