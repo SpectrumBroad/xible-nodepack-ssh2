@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased][]
 Nothing notable at the moment.
 
+## [0.8.0][] - 2017-10-31
+### Changed
+-   THe input fields which are required in the editor now have that flag set which keeps them visible in XIBLE versions 0.9.0 and above if the node is not focused.
+
 ## [0.7.0][] - 2017-09-08
 ### Added
 -   The ssh2.client.exec node allows commands to run under sudo or another user, by introducing a new "sudo user" field. This makes it easier to write `sudo su - user -c 'command'` commands.
@@ -39,7 +43,8 @@ Nothing notable at the moment.
 ### Fixed
 -   ssh2.client.disconnect now waits for all connections to actually end before triggering 'done'.
 
-[Unreleased]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.4.0...v0.5.0
