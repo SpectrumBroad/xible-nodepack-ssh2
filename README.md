@@ -5,7 +5,8 @@ This is a nodepack for [XIBLE](https://xible.io), which provides SSH2 functional
 - [XIBLE](https://xible.io)
 
 # Install
-<pre><code>xiblepm install nodepack ssh2</code></pre>
+<pre><code>xiblepm nodepack install ssh2</code></pre>
+Or use the editor.
 
 # Versioning
 This project adheres to [Semantic Versioning](http://semver.org/). For the versions available, see the [tags on this repository](https://github.com/spectrumbroad/xible-nodepack-ssh2/tags) and the [CHANGELOG.md](CHANGELOG.md).
