@@ -65,6 +65,7 @@ module.exports = (NODE) => {
 
     let closeCount = 0;
     let endCount = 0;
+    let endErrCount = 0;
     const clientsLength = clients.length;
     const commandsLength = commands.length;
     const callLength = clientsLength * commandsLength;
@@ -138,6 +139,12 @@ module.exports = (NODE) => {
           color: 'red',
           timeout: 7000
         });
+      });
+
+      stderr.on('end', () => {
+        if (++endErrCount === callLength) {
+          stdErrStream.emit('end');
+        }
       });
     };
 
