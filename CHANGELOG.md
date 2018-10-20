@@ -9,11 +9,11 @@ Nothing notable at the moment.
 
 ## [0.8.0][] - 2017-10-31
 ### Changed
--   THe input fields which are required in the editor now have that flag set which keeps them visible in XIBLE versions 0.9.0 and above if the node is not focused.
+-   The input fields which are required in the editor now have that flag set which keeps them visible in XIBLE versions 0.9.0 and above if the node is not focused.
 
 ## [0.7.0][] - 2017-09-08
 ### Added
--   The ssh2.client.exec node allows commands to run under sudo or another user, by introducing a new "sudo user" field. This makes it easier to write `sudo su - user -c 'command'` commands.
+-   The `ssh2.client.exec` node allows commands to run under sudo or another user, by introducing a new "sudo user" field. This makes it easier to write `sudo su - user -c 'command'` commands.
 
 ### Fixed
 -   ssh2.client.sftp.copy could cause an unexpected 'failure' message when copying many files in multiple directories. This has been fixed by making the copying of files a synchronize task per client.
