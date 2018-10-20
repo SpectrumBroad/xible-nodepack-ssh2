@@ -119,7 +119,7 @@ module.exports = (NODE) => {
       });
 
       stdout.on('data', (data) => {
-        stdOutStream.emit('data', data);
+        stdOutStream.emit('data', data.toString());
 
         NODE.addStatus({
           message: `${data}`,
@@ -130,7 +130,7 @@ module.exports = (NODE) => {
       // handle stderr
       // TODO: handle other stream events on stderr
       stderr.on('data', (data) => {
-        stdErrStream.emit('data', data);
+        stdErrStream.emit('data', data.toString());
         stdErrStr += data;
 
         NODE.addStatus({
