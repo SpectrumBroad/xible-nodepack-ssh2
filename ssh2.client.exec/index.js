@@ -5,119 +5,151 @@ module.exports = (NODE) => {
   const childProcess = require('child_process');
 
   const doneOut = NODE.getOutputByName('done');
+  const startedOut = NODE.getOutputByName('started');
   const stdOut = NODE.getOutputByName('stdout');
   const stdErr = NODE.getOutputByName('stderr');
 
-  const stdOutStream = new EventEmitter();
-  const stdErrStream = new EventEmitter();
-
-  stdOut.on('trigger', (conn, state, callback) => {
-    callback(stdOutStream);
-  });
-
-  stdErr.on('trigger', (conn, state, callback) => {
-    callback(stdErrStream);
-  });
-
-  const clientsIn = NODE.getInputByName('clients');
-  const triggerIn = NODE.getInputByName('trigger');
-  triggerIn.on('trigger', (conn, state) => {
-    // build the command
-    let cmd = NODE.data.cmd;
-    if (NODE.data.sudoUser === 'root') {
-      cmd = `sudo ${cmd}`;
-    } else if (NODE.data.sudoUser) {
-      cmd = `sudo su - '${NODE.data.sudoUser}' -c "${cmd.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+  stdOut.on('trigger', async (conn, state) => {
+    const thisState = state.get(NODE);
+    if (!thisState) {
+      return;
     }
 
+    return thisState.stdOutStream;
+  });
+
+  stdErr.on('trigger', async (conn, state) => {
+    const thisState = state.get(NODE);
+    if (!thisState) {
+      return;
+    }
+
+    return thisState.stdErrStream;
+  });
+
+  const commandsIn = NODE.getInputByName('commands');
+  const clientsIn = NODE.getInputByName('clients');
+  const triggerIn = NODE.getInputByName('trigger');
+  triggerIn.on('trigger', async (conn, state) => {
+    // get the commands to run
+    let commands = await commandsIn.getValues(state);
+    if (!commands.length) {
+      commands.push(NODE.data.cmd);
+    }
+
+    // add sudo details to the command
+    if (NODE.data.sudoUser) {
+      commands = commands.map((cmd) => {
+        if (NODE.data.sudoUser === 'root') {
+          return `sudo ${cmd}`;
+        }
+        return `sudo su - '${NODE.data.sudoUser}' -c "${cmd.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+      });
+    }
+
+    // build the streams and save them in the state
+    const stdOutStream = new EventEmitter();
+    const stdErrStream = new EventEmitter();
+    state.set(NODE, {
+      stdOutStream,
+      stdErrStream
+    });
+
+    startedOut.trigger(state);
+
     // get the clients to execute this command on
-    clientsIn.getValues(state)
-    .then((clients) => {
-      if (!clients.length) {
-        clients = ['local'];
+    const clients = await clientsIn.getValues(state);
+    if (!clients.length) {
+      clients.push('local');
+    }
+
+    let closeCount = 0;
+    let endCount = 0;
+    const clientsLength = clients.length;
+    const commandsLength = commands.length;
+    const callLength = clientsLength * commandsLength;
+
+    const handleExec = (cmd, err, stdout, stderr, clientExec) => {
+      if (err) {
+        NODE.error(err, state);
+        return;
       }
 
-      const handleExec = (err, stdout, stderr, clientExec) => {
-        if (err) {
-          NODE.error(err, state);
+      if (!stderr) {
+        stderr = stdout.stderr;
+      }
+
+      // Handle exit codes for 'local' / child_process.
+      let exitCode;
+      let stdErrStr = '';
+      if (clientExec) {
+        clientExec.on('exit', (code) => {
+          exitCode = code;
+        });
+      }
+
+      // handle stdout
+      stdout.on('close', (code) => {
+        let done = false;
+        if (++closeCount === callLength) {
+          stdOutStream.emit('close');
+          done = true;
+        }
+
+        if (code || exitCode) {
+          NODE.error(`Command failed: ${cmd} \n${stdErrStr}`, state);
           return;
         }
 
-        let closeCount = 0;
-        let endCount = 0;
-        const clientsLength = clients.length;
-
-        if (!stderr) {
-          stderr = stdout.stderr;
+        // check if we have processed the command for all clients
+        if (done) {
+          doneOut.trigger(state);
         }
+      });
 
-        // Handle exit codes for 'local' / child_process.
-        let exitCode;
-        if (clientExec) {
-          clientExec.on('exit', (code) => {
-            exitCode = code;
-          });
+      stdout.on('end', () => {
+        if (++endCount === callLength) {
+          stdOutStream.emit('end');
         }
+      });
 
-        // handle stdout
-        stdout.on('close', (code) => {
-          let done = false;
-          if (++closeCount === clientsLength) {
-            stdOutStream.emit('close');
-            done = true;
-          }
+      stdout.on('error', (streamErr) => {
+        stdOutStream.emit('error', streamErr);
+        NODE.error(streamErr, state);
+      });
 
-          if (code || exitCode) {
-            NODE.error(`exited with non-zero code: "${code || exitCode}"`, state);
-            return;
-          }
+      stdout.on('data', (data) => {
+        stdOutStream.emit('data', data);
 
-          // check if we have processed the command for all clients
-          if (done) {
-            doneOut.trigger(state);
-          }
+        NODE.addStatus({
+          message: `${data}`,
+          timeout: 7000
         });
+      });
 
-        stdout.on('end', () => {
-          if (++endCount === clientsLength) {
-            stdOutStream.emit('end');
-          }
+      // handle stderr
+      // TODO: handle other stream events on stderr
+      stderr.on('data', (data) => {
+        stdErrStream.emit('data', data);
+        stdErrStr += data;
+
+        NODE.addStatus({
+          message: `${data}`,
+          color: 'red',
+          timeout: 7000
         });
+      });
+    };
 
-        stdout.on('error', (streamErr) => {
-          stdOutStream.emit('error', streamErr);
-          NODE.error(streamErr, state);
-        });
-
-        stdout.on('data', (data) => {
-          stdOutStream.emit('data', data);
-
-          NODE.addStatus({
-            message: `${data}`,
-            timeout: 7000
-          });
-        });
-
-        // handle stderr
-        // TODO: handle other stream events on stderr
-        stderr.on('data', (data) => {
-          stdErrStream.emit('data', data);
-
-          NODE.addStatus({
-            message: `${data}`,
-            color: 'red',
-            timeout: 7000
-          });
-        });
-      };
-
-      clients.forEach((client) => {
+    clients.forEach((client) => {
+      commands.forEach((cmd) => {
         if (client === 'local') {
-          client = childProcess;
-          const clientExec = client.exec(cmd);
-          handleExec(null, clientExec.stdout, clientExec.stderr, clientExec);
+          const clientExec = childProcess.exec(cmd);
+          handleExec(cmd, null, clientExec.stdout, clientExec.stderr, clientExec);
         } else {
-          client.exec(cmd, handleExec);
+          client.exec(cmd, (err, stdout, stderr) => {
+            handleExec(cmd, err, stdout, stderr);
+          });
         }
       });
     });

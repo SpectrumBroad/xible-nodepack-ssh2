@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased][]
 Nothing notable at the moment.
 
+## [0.9.0][] - 2018-06-17
+### Added
+-   The `ssh2.client.exec` node now allows commands to be passed through the `commands` input.
+
+-   Meaningful errors are now reported for the `ssh2.client.exec` node, instead of just an exit code.
+
+-   A "started" output for the `ssh2.client.exec` node is now in place to transfer state. This is required for example in the use of [stream](https://xible.io/nodes?search=stream) nodes.
+
 ## [0.8.0][] - 2017-10-31
 ### Changed
 -   The input fields which are required in the editor now have that flag set which keeps them visible in XIBLE versions 0.9.0 and above if the node is not focused.
@@ -43,7 +51,8 @@ Nothing notable at the moment.
 ### Fixed
 -   ssh2.client.disconnect now waits for all connections to actually end before triggering 'done'.
 
-[Unreleased]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/SpectrumBroad/xible-nodepack-ssh2/compare/v0.5.0...v0.6.0

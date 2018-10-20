@@ -9,9 +9,17 @@
     "clients": {
       "type": "ssh2.client",
       "description": "The clients to execute the command on. If left unconnected, this is assumed to be ssh2.client.local."
+    },
+    "commands": {
+      "type": "string",
+      "description": "Commands to execute on the client."
     }
   },
   "outputs": {
+    "started": {
+      "type": "trigger",
+      "description": "Triggered when the command(s) have started."
+    },
     "done": {
       "type": "trigger",
       "description": "Triggered whenever all standard output streams have closed."
